@@ -8,32 +8,32 @@ import bcrypt from 'bcrypt';
 export const signupController = async(req: Request, res: Response, next: NextFunction) => {
     try {
         //validating inputs
-        if(!req.body.username || !req.body.phone || !req.body.email || !req.body.password || !req.body.confirmPassword || !req.body.interests){
+        if(!req?.body?.username || !req?.body?.phone || !req?.body?.email || !req?.body?.password || !req?.body?.confirmPassword || !req?.body?.interests){
             throw createHttpError(400, "All fields are required");
         }
 
         //check for password match
-        if(req.body.password !== req.body.confirmPassword){
+        if(req?.body?.password !== req?.body?.confirmPassword){
             throw createHttpError(400, "Passwords do not match");
         }
 
         //find if user already exists
-        const existingUser = await User.findOne({email: req.body.email});
+        const existingUser = await User.findOne({email: req?.body?.email});
         if(existingUser){
             throw createHttpError(400, "User already exists");
         }
 
         //hash password
-        const hashedPassword = await bcrypt.hash(req.body.password, 10);
+        const hashedPassword = await bcrypt.hash(req?.body?.password, 10);
 
         //create user
         const user = new User({
-            username: req.body.username,
-            email: req.body.email,
+            username: req?.body?.username,
+            email: req?.body?.email,
             password: hashedPassword,
-            mobile: req.body.phone,
-            profilePic: req.body.profilePic ?? null,
-            interests: req.body.interests
+            mobile: req?.body?.phone,
+            profilePic: req?.body?.profilePic ?? null,
+            interests: req?.body?.interests
         });
 
         //save user
@@ -55,19 +55,19 @@ export const signupController = async(req: Request, res: Response, next: NextFun
 export const loginUserController = async(req: Request, res: Response, next: NextFunction) => {
     try {
         //validate inputs
-        if(!req.body.email || !req.body.password){
+        if(!req?.body?.email || !req?.body?.password){
             throw createHttpError(400, "All fields are required");
         }
 
         //find user
-        const existingUser = await User.findOne({email: req.body.email});
+        const existingUser = await User.findOne({email: req?.body?.email});
         console.log(existingUser?.password)
         if(!existingUser){
             throw createHttpError(400, "User does not exist");
         }
 
         //check password
-        const isPasswordValid = await bcrypt.compare(req.body.password, existingUser.password);
+        const isPasswordValid = await bcrypt.compare(req?.body?.password, existingUser.password);
         console.log(isPasswordValid);
         if(!isPasswordValid){
             throw createHttpError(400, "Invalid password");
@@ -78,6 +78,46 @@ export const loginUserController = async(req: Request, res: Response, next: Next
 
         //send response
         res.status(200).json({ success: true, message: "Login successful", token, data:{ username: existingUser?.username, email: existingUser?.email  } });
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+//change the password
+export const changePasswordController = async(req: Request, res: Response, next: NextFunction) => {
+    try {
+        console.log(req.user, req.body);
+        //validate inputs
+        if(!req?.body?.oldPassword || !req?.body?.newPassword || !req?.body?.confirmPassword){
+            throw createHttpError(400, "All fields are required");
+        }
+
+        //check for password match
+        if(req?.body?.newPassword !== req?.body?.confirmPassword){
+            throw createHttpError(400, "Passwords do not match");
+        }
+
+        //find user
+        const existingUser = await User.findOne({_id: req?.user?.userID});
+        if(!existingUser){
+            throw createHttpError(400, "User does not exist");
+        }
+
+        //check password
+        const isPasswordValid = await bcrypt.compare(req?.body?.oldPassword, existingUser.password);
+        if(!isPasswordValid){
+            throw createHttpError(400, "Invalid password");
+        }
+
+        //hash password
+        const hashedPassword = await bcrypt.hash(req?.body?.newPassword, 10);
+
+        //update password
+        await User.updateOne({ _id: req?.user?.userID }, { $set: { password: hashedPassword } });
+
+        //send response
+        res.status(200).json({ success: true, message: "Password changed successfully" });
 
     } catch (error) {
         next(error)
