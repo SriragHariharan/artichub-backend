@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import createHttpError from "http-errors";
 import User from "../models/User";
+import cloudinary from "../config/cloudinary";
 
 //get profileDetails
 export const getProfileDetailsController = async (req: Request, res: Response, next: NextFunction) => {
@@ -29,3 +30,60 @@ export const updateUsernameController = async (req: Request, res: Response, next
         next(error);
     }
 };
+
+//update profilePic
+export const updateProfilePicController = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.files || !req.files.profilePic) {
+      return next(createHttpError(400, 'No file uploaded'));
+    }
+
+    const profilePic = req.files.profilePic;
+    const userID = req.user?.userID;
+
+    //Get the existing user
+    const user = await User.findById(userID);
+    if (!user) {
+      return next(createHttpError(404, 'User not found'));
+    }
+
+    // If user has existing profile picture in Cloudinary, delete it
+    if (user.profilePic) {
+      try {
+        // Extract public ID from the URL (last part without extension)
+        const urlParts = user.profilePic.split('/');
+        const publicIdWithExtension = urlParts[urlParts.length - 1];
+        const publicId = publicIdWithExtension.split('.')[0];
+        const fullPublicId = `article-hub/${publicId}`;
+
+        await cloudinary.uploader.destroy(fullPublicId);
+        console.log('Deleted old image from Cloudinary');
+      } catch (error) {
+        console.error('Error deleting old image from Cloudinary:', error);
+      }
+    }
+
+    //Upload new image to Cloudinary
+    const result = await cloudinary.uploader.upload(profilePic.tempFilePath, {
+      folder: 'article-hub',
+      width: 150,
+      height: 150,
+      crop: 'fill'
+    });
+
+    //Update user in database
+    await User.updateOne(
+      { _id: userID },
+      { profilePic: result.secure_url }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile picture updated successfully',
+      url: result.secure_url
+    });
+  } catch (error) {
+    console.error('Error updating profile picture:', error);
+    next(createHttpError(500, 'Failed to update profile picture'));
+  }
+}
