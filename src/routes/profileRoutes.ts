@@ -1,5 +1,6 @@
 import { 
   getProfileDetailsController, 
+  updateInterestsController, 
   updateProfilePicController, 
   updateUsernameController 
 } from "../controllers/profileController";
@@ -21,5 +22,8 @@ profileRouter.put(
   fileUploadMiddleware, 
   updateProfilePicController
 );
+
+//update interests
+profileRouter.put('/interests', authMiddleware, updateInterestsController);
 
 export default profileRouter;

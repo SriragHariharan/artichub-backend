@@ -87,3 +87,20 @@ export const updateProfilePicController = async (req: Request, res: Response, ne
     next(createHttpError(500, 'Failed to update profile picture'));
   }
 }
+
+//update interests
+export const updateInterestsController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        if(!req?.body?.interests || !Array.isArray(req?.body?.interests) || req?.body?.interests.length === 0){
+            throw createHttpError(400, "Interests are required");
+        }
+
+        const updatedResponse = await User.updateOne({ _id: req?.user?.userID }, { $set: { interests: req?.body?.interests } });
+        if(!updatedResponse){
+            throw createHttpError(400, "User does not exist");
+        } 
+        res.status(200).json({ success: true, message: "Interests updated successfully", data: { interests: req?.body?.interests }});
+    } catch (error) {    
+        next(error);
+    }
+};
