@@ -1,3 +1,4 @@
+import connectDB from './config/db';
 import express, { Request, Response, NextFunction } from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
@@ -31,8 +32,11 @@ app.get('/test', (_req: Request, res: Response) => {
 
 // Auth route
 import authRouter from './routes/authRoutes';
-import connectDB from './config/db';
 app.use("/auth", authRouter);
+
+// Profile route
+import profileRouter from './routes/profileRoutes';
+app.use("/profile", profileRouter);
 
 // Global error handler middleware
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
