@@ -48,12 +48,49 @@ export const getPostDetailsController = async (req: Request, res: Response, next
     }
 };
 
+//update a post
+export const updatePostController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const updatedPost = await Post.findByIdAndUpdate(
+            req.params?.postID,
+            { $set: { ...req.body } },
+            { new: true } // <- this returns the updated document
+        );
+
+        if (!updatedPost) {
+            throw createHttpError(404, "Post not found");
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Post updated successfully",
+            data: updatedPost
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+//delete a post
+export const deletePostController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const deletedPost = await Post.findByIdAndDelete(req.params?.postID);
+        if (!deletedPost) {
+            throw createHttpError(404, "Post not found");
+        }
+        res.status(200).json({ success: true, message: "Post deleted successfully"});
+    } catch (error) {
+        next(error);
+    }
+};
+
 /*
     TODO
     1. Create a post ✅
-    2. Edit a post
+    2. Edit a post ✅
     3. Delete a post 
-    4. Get details of a post 
+    4. Get details of a post ✅
     5. Add like to a post
     6. Remove like from a post 
 */
