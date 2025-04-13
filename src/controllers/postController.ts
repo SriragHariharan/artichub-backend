@@ -107,6 +107,16 @@ export const likePostController = async (req: Request, res: Response, next: Next
     }
 }
 
+//get all the posts of a user
+export const getAllPostsController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const posts = await Post.find({ author: req?.user?.userID });
+        res.status(200).json({ success: true, message: "Posts fetched successfully", data: posts });
+    } catch (error) {
+        next(error);
+    }
+}
+
 /*
     TODO
     1. get all posts of him

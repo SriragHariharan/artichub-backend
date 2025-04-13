@@ -1,6 +1,7 @@
 import { 
     createPostController, 
     deletePostController, 
+    getAllPostsController, 
     getPostDetailsController,
     likePostController,
     updatePostController
@@ -24,5 +25,8 @@ postRouter.delete('/:postID', authMiddleware, deletePostController);
 
 //like or unlike a post
 postRouter.put('/:postID/like', authMiddleware, likePostController);
+
+//get all posts of a user
+postRouter.get('/', authMiddleware, getAllPostsController);
 
 export default postRouter;
