@@ -35,6 +35,19 @@ export const createPostController = async (req: Request, res: Response, next: Ne
 };
 
 
+//get the details of a post
+export const getPostDetailsController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const post = await Post.findById(req.params.id).populate("author",[ "-password",  "-email", "-mobile"]);
+        if (!post) {
+            throw createHttpError(404, "Post not found");
+        }
+        res.status(200).json({ success: true, message: "Post details fetched successfully", data: post });
+    } catch (error) {
+        next(error);
+    }
+};
+
 /*
     TODO
     1. Create a post ✅
