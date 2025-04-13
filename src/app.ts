@@ -38,6 +38,10 @@ app.use("/auth", authRouter);
 import profileRouter from './routes/profileRoutes';
 app.use("/profile", profileRouter);
 
+// Post route
+import postRouter from './routes/postRoutes';
+app.use("/post", postRouter);
+
 // Global error handler middleware
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err);
