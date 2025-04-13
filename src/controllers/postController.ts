@@ -85,12 +85,29 @@ export const deletePostController = async (req: Request, res: Response, next: Ne
     }
 };
 
+//like or unlike a post
+export const likePostController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        //check if the user has already liked the post
+        const post = await Post.findById(req.params?.postID);
+        if (!post) {
+            throw createHttpError(404, "Post not found");
+        }
+
+        //check if the user has already liked the post
+        if (post?.likes?.includes(req?.user?.userID)) {
+            const updatedPost = await Post.findByIdAndUpdate(req.params?.postID, { $pull: { likes: req?.user?.userID } }, { new: true });
+            res.status(200).json({ success: true, message: "Post unliked successfully", data: updatedPost });
+        } else {
+            const updatedPost = await Post.findByIdAndUpdate(req.params?.postID, { $push: { likes: req?.user?.userID } }, { new: true });
+            res.status(200).json({ success: true, message: "Post liked successfully", data: updatedPost }); 
+        }
+    } catch (error) {
+        next(error);
+    }
+}
+
 /*
     TODO
-    1. Create a post ✅
-    2. Edit a post ✅
-    3. Delete a post 
-    4. Get details of a post ✅
-    5. Add like to a post
-    6. Remove like from a post 
+    1. get all posts of him
 */

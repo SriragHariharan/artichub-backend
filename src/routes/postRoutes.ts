@@ -2,6 +2,7 @@ import {
     createPostController, 
     deletePostController, 
     getPostDetailsController,
+    likePostController,
     updatePostController
 } from "../controllers/postController";
 import authMiddleware from "../helpers/authMiddleware";
@@ -20,5 +21,8 @@ postRouter.put('/:postID', authMiddleware, updatePostController);
 
 //delete post
 postRouter.delete('/:postID', authMiddleware, deletePostController);
+
+//like or unlike a post
+postRouter.put('/:postID/like', authMiddleware, likePostController);
 
 export default postRouter;
