@@ -2,6 +2,8 @@ import {
     createPostController, 
     deletePostController, 
     getAllPostsController, 
+    getFeedController, 
+    getMyPostsController, 
     getPostDetailsController,
     likePostController,
     updatePostController
@@ -13,6 +15,12 @@ const postRouter = require('express').Router();
 
 //create post
 postRouter.post('/', authMiddleware, fileUploadMiddleware, createPostController);
+
+//get feed
+postRouter.get('/feeds', authMiddleware, getFeedController);
+
+//get all posts of a specific user
+postRouter.get('/mine', authMiddleware, getMyPostsController);
 
 //get post details
 postRouter.get('/:id', authMiddleware, getPostDetailsController);
@@ -28,5 +36,7 @@ postRouter.put('/:postID/like', authMiddleware, likePostController);
 
 //get all posts of a user
 postRouter.get('/', authMiddleware, getAllPostsController);
+
+
 
 export default postRouter;

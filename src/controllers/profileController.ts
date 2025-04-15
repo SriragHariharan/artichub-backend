@@ -41,6 +41,10 @@ export const updateProfilePicController = async (req: Request, res: Response, ne
     const profilePic = req.files.profilePic;
     const userID = req.user?.userID;
 
+    if (Array.isArray(profilePic)) {
+      return next(createHttpError(400, 'Only one file allowed for profile picture'));
+    }
+
     //Get the existing user
     const user = await User.findById(userID);
     if (!user) {

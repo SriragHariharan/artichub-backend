@@ -13,6 +13,10 @@ const postSchema = new mongoose.Schema({
         type: String,
         required: false,
     },
+    category: {
+        type: String,
+        required: true
+    },
     author: {
         type: Schema.Types.ObjectId,
         ref: 'User',

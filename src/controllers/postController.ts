@@ -2,19 +2,26 @@ import { NextFunction, Request, Response } from "express";
 import createHttpError from "http-errors";
 import cloudinary from "../config/cloudinary";
 import Post from "../models/Post";
+import User from "../models/User";
+import mongoose from "mongoose";
 
 //create new post
 export const createPostController = async (req: Request, res: Response, next: NextFunction) => {
     try {
         console.log(req.body, req.files);
         //check for the fields
-        if (!req?.body?.title || !req?.body?.description) {
+        if (!req?.body?.title || !req?.body?.description || !req?.body?.category) {
             throw createHttpError(400, "All fields are required");
         }
 
         //upload image to cloudinary if image is present
         if (req.files && req.files.image) {
             const image = req.files.image;
+            
+            if (Array.isArray(image)) {
+                throw createHttpError(400, "Only one image is allowed"); // or handle multiple uploads
+            }
+
             const uploadResponse = await cloudinary.uploader.upload(image.tempFilePath, {
                 folder: "article-hub/posts",
                 
@@ -37,16 +44,36 @@ export const createPostController = async (req: Request, res: Response, next: Ne
 
 //get the details of a post
 export const getPostDetailsController = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const post = await Post.findById(req.params.id).populate("author",[ "-password",  "-email", "-mobile"]);
-        if (!post) {
-            throw createHttpError(404, "Post not found");
-        }
-        res.status(200).json({ success: true, message: "Post details fetched successfully", data: post });
-    } catch (error) {
-        next(error);
+  try {
+    const post = await Post.findById(req.params.id).populate("author", [
+      "-password",
+      "-email",
+      "-mobile"
+    ]);
+
+    if (!post) {
+      throw createHttpError(404, "Post not found");
     }
+
+    const isMine = post.author._id.toString() === req?.user?.userID;
+
+    // Convert the post to a plain JS object
+    const postObject = post.toObject();
+
+    return res.status(200).json({
+      success: true,
+      message: "Post details fetched successfully",
+      data: {
+        ...postObject,
+        edit: isMine,
+        delete: isMine
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
 };
+
 
 //update a post
 export const updatePostController = async (req: Request, res: Response, next: NextFunction) => {
@@ -117,7 +144,27 @@ export const getAllPostsController = async (req: Request, res: Response, next: N
     }
 }
 
-/*
-    TODO
-    1. get all posts of him
-*/
+//get feed
+export const getFeedController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const interests = await User.findById(req?.user?.userID).select("interests");
+        console.log(interests?.interests);
+
+        //get all the posts based on the interests array
+        const posts = await Post.find({ category: { $in: interests?.interests } }).populate("author", [ "-password",  "-email", "-mobile"]);
+        console.log(posts)
+        res.status(200).json({ success: true, message: "Posts fetched successfully", data: posts });
+    } catch (error) {
+        next(error);
+    }
+}
+
+//get all the posts of a specific user
+export const getMyPostsController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const posts = await Post.find({ author: req?.user?.userID }).populate("author", [ "-password",  "-email", "-mobile"]);
+        res.status(200).json({ success: true, message: "Posts fetched successfully", data: posts });
+    } catch (error) {
+        next(error);
+    }
+}

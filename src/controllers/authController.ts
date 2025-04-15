@@ -89,7 +89,7 @@ export const changePasswordController = async(req: Request, res: Response, next:
     try {
         console.log(req.user, req.body);
         //validate inputs
-        if(!req?.body?.oldPassword || !req?.body?.newPassword || !req?.body?.confirmPassword){
+        if(!req?.body?.password || !req?.body?.newPassword || !req?.body?.confirmPassword){
             throw createHttpError(400, "All fields are required");
         }
 
@@ -105,7 +105,7 @@ export const changePasswordController = async(req: Request, res: Response, next:
         }
 
         //check password
-        const isPasswordValid = await bcrypt.compare(req?.body?.oldPassword, existingUser.password);
+        const isPasswordValid = await bcrypt.compare(req?.body?.password, existingUser.password);
         if(!isPasswordValid){
             throw createHttpError(400, "Invalid password");
         }
