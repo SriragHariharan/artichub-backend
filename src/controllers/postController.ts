@@ -3,7 +3,7 @@ import createHttpError from "http-errors";
 import cloudinary from "../config/cloudinary";
 import Post from "../models/Post";
 import User from "../models/User";
-import mongoose from "mongoose";
+import { Types } from "mongoose";
 
 //create new post
 export const createPostController = async (req: Request, res: Response, next: NextFunction) => {
@@ -17,7 +17,7 @@ export const createPostController = async (req: Request, res: Response, next: Ne
         //upload image to cloudinary if image is present
         if (req.files && req.files.image) {
             const image = req.files.image;
-            
+
             if (Array.isArray(image)) {
                 throw createHttpError(400, "Only one image is allowed"); // or handle multiple uploads
             }
@@ -58,7 +58,15 @@ export const getPostDetailsController = async (req: Request, res: Response, next
     const isMine = post.author._id.toString() === req?.user?.userID;
 
     // Convert the post to a plain JS object
-    const postObject = post.toObject();
+    const postObject = post.toObject() as typeof post & { isLiked?: boolean };
+
+    postObject.isLiked = false;
+    console.log(postObject?.likes)
+
+    // check if I have liked the post
+    if (postObject?.likes?.some((like: Types.ObjectId) => like.equals(req?.user?.userID))) {
+        postObject.isLiked = true;
+    }
 
     return res.status(200).json({
       success: true,
